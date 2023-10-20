@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/switch/switch.h"
 
+#define byte uint8_t
 namespace esphome
 {
   namespace q8rf
@@ -14,6 +15,7 @@ namespace esphome
       char *on_message_;
       char *off_message_;
       bool state_ = false;
+      void hextoascii(byte *ascii_ptr, byte *hex_ptr, int len);
 
     public:
       Q8RFSwitch() {}

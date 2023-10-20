@@ -22,6 +22,7 @@ cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and 
 #define   READ_BURST        0xC0            //read burst
 #define   BYTES_IN_RXFIFO   0x7F            //byte number in RXfifo
 #define   max_modul 6
+#define byte uint8_t
 
 byte modulation = 2;
 byte frend0;
