@@ -99,6 +99,7 @@ namespace esphome
             {
                 cmdline = off_message_;
             }
+             ESP_LOGCONFIG(TAG, "cmdline");
             len = strlen(cmdline);
             // convert hex array to set of bytes
             // convert the hex content to array of bytes
