@@ -17,7 +17,7 @@ namespace esphome
         void Q8RFSwitch::write_state(bool state)
         {
 
-            ESP_LOGCONFIG(TAG, "state: %s", state);
+             ESP_LOGCONFIG(TAG, "write_state: %s", state ? "true" : "false");
             if (this->state_ != state)
             {
                 this->set_state(state);
