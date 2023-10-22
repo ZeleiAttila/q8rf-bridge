@@ -13,8 +13,9 @@
 cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and publish Wilson Shen (ELECHOUSE).
 ----------------------------------------------------------------------------------------------------------------
 */
-#include "esphome/components/spi/spi.h"
+#include <SPI.h>
 #include "ELECHOUSE_CC1101_SRC_DRV.h"
+#include <Arduino.h>
 
 /****************************************************************/
 #define   WRITE_BURST       0x40            //write burst
@@ -22,7 +23,6 @@ cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and 
 #define   READ_BURST        0xC0            //read burst
 #define   BYTES_IN_RXFIFO   0x7F            //byte number in RXfifo
 #define   max_modul 6
-#define byte uint8_t
 
 byte modulation = 2;
 byte frend0;

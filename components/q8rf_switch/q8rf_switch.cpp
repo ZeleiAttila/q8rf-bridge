@@ -3,9 +3,10 @@
 #include "q8rf_switch.h"
 #include "ELECHOUSE_CC1101_SRC_DRV.h"
 #include "esphome.h"
+#include <string>
 
 #define CCBUFFERSIZE 64
-#define RECORDINGBUFFERSIZE 4096 // Buffer for recording the frames
+#define RECORDINGBUFFERSIZE 1024 // Buffer for recording the frames
 #define EPROMSIZE 4096           // Size of EEPROM in your Arduino chip. For  ESP8266 size is 4096
 #define BUF_LENGTH 128           // Buffer for the incoming command.
 namespace esphome
@@ -15,17 +16,25 @@ namespace esphome
 
         static const char *TAG = "q8rf.switch";
 
-
         byte textbuffer[BUF_LENGTH];
         // buffer for recording and replaying of many frames
         byte bigrecordingbuffer[RECORDINGBUFFERSIZE] = {0};
         // defining PINs set for ESP8266 - WEMOS D1 MINI module
-        byte sck = 14;  // GPIO 14
-        byte miso = 12; // GPIO 12
-        byte mosi = 13; // GPIO 13
-        byte ss = 15;   // GPIO 15
-        int gdo0 = 5;   // GPIO 5
-        int gdo2 = 4;   // GPIO 4
+        /*
+         byte sck = 14;  // GPIO 14
+         byte miso = 12; // GPIO 12
+         byte mosi = 13; // GPIO 13
+         byte ss = 15;   // GPIO 15
+         int gdo0 = 5;   // GPIO 5
+         int gdo2 = 4;   // GPIO 4
+ */
+        byte sck = 18; // GPIO 18
+        byte miso = 19; // GPIO 19
+        byte mosi = 23; // GPIO
+        byte ss = 5; // GPIO 5
+        int gdo0 = 2; // GPIO 2
+        int gdo2 = 4; // GPIO 4
+
         int bigrecordingbufferpos = 0;
         int len;
 
@@ -82,6 +91,8 @@ namespace esphome
             if (this->state_ != state)
             {
                 this->set_state(state);
+                this->state_ = state;
+                this->publish_state(state);
             }
         }
 
@@ -90,16 +101,16 @@ namespace esphome
 
             // read the incoming byte:
             bigrecordingbufferpos = 0;
-            char *cmdline;
+            const char *cmdline;
             if (state)
             {
-                cmdline = on_message_;
+                cmdline = on_message_.c_str();
             }
             else
             {
-                cmdline = off_message_;
+                cmdline = off_message_.c_str();
             }
-             ESP_LOGCONFIG(TAG, "cmdline");
+            ESP_LOGCONFIG(TAG, "cmdline: %s", cmdline);
             len = strlen(cmdline);
             // convert hex array to set of bytes
             // convert the hex content to array of bytes
@@ -131,33 +142,33 @@ namespace esphome
             // temporarly disable WDT for the time of recording
             // ESP.wdtDisable();
             // start RF replay
-            for (int i = 1; i < RECORDINGBUFFERSIZE; i++)
+            for (int i = 1; i < len; i++)
             {
                 byte receivedbyte = bigrecordingbuffer[i];
                 for (int j = 7; j > -1; j--) // 8 bits in a byte
                 {
                     digitalWrite(gdo0, bitRead(receivedbyte, j)); // Set GDO0 according to recorded byte
                     delayMicroseconds(400);                       // delay for selected sampling interval
-                };
+                }
                 // feed the watchdog
-                ESP.wdtFeed();
-            };
+              //  ESP.wdtFeed();
+            }
             // Enable WDT
             // ESP.wdtEnable(5000);
 
             ESP_LOGCONFIG(TAG, "Replaying RAW data complete.");
             // setting normal pkt format again
+
             ELECHOUSE_cc1101.setCCMode(1);
             ELECHOUSE_cc1101.setPktFormat(0);
             ELECHOUSE_cc1101.SetTx();
             // pinMode(gdo0pin, INPUT);
             // feed the watchdog
-            ESP.wdtFeed();
+         //   ESP.wdtFeed();
             // needed for ESP8266
             yield();
-
-            this->state_ = state;
-            this->publish_state(state);
+            ESP_LOGCONFIG(TAG, "end");
+            this->setup();
         }
 
         void Q8RFSwitch::dump_config()
@@ -192,8 +203,8 @@ namespace esphome
             ascii_ptr[i++] = '\0';
         }
 
-        void Q8RFSwitch::set_on_message(char *on_message) { this->on_message_ = on_message; }
-        void Q8RFSwitch::set_off_message(char *off_message) { this->off_message_ = off_message; }
+        void Q8RFSwitch::set_on_message(std::string on_message) { this->on_message_ = on_message; }
+        void Q8RFSwitch::set_off_message(std::string off_message) { this->off_message_ = off_message; }
 
     } // namespace q8rf
 } // namespace esphome
