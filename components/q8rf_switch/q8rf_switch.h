@@ -10,7 +10,7 @@ namespace esphome
   namespace q8rf
   {
 
-    class Q8RFSwitch : public switch_::Switch, public PollingComponent
+    class Q8RFSwitch : public switch_::Switch, public Component
     {
     protected:
       std::string on_message_;
