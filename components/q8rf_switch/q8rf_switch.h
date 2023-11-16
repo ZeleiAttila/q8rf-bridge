@@ -19,7 +19,7 @@ namespace esphome
       void hextoascii(byte *ascii_ptr, byte *hex_ptr, int len);
 
     public:
-      Q8RFSwitch() : PollingComponent(1000) {}
+      Q8RFSwitch() {}
       void set_on_message(std::string on_message);
       void set_off_message(std::string off_message);
       void setup();
