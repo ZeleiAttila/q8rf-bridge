@@ -5,10 +5,7 @@
 #include "esphome.h"
 #include <string>
 
-#define CCBUFFERSIZE 64
-#define RECORDINGBUFFERSIZE 1024 // Buffer for recording the frames
-#define EPROMSIZE 4096           // Size of EEPROM in your Arduino chip. For  ESP8266 size is 4096
-#define BUF_LENGTH 128           // Buffer for the incoming command.
+#define BUF_LENGTH 128
 namespace esphome
 {
     namespace q8rf
@@ -17,26 +14,28 @@ namespace esphome
         static const char *TAG = "q8rf.switch";
 
         byte textbuffer[BUF_LENGTH];
-        // buffer for recording and replaying of many frames
-        byte bigrecordingbuffer[RECORDINGBUFFERSIZE] = {0};
-        // defining PINs set for ESP8266 - WEMOS D1 MINI module
-        /*
-         byte sck = 14;  // GPIO 14
-         byte miso = 12; // GPIO 12
-         byte mosi = 13; // GPIO 13
-         byte ss = 15;   // GPIO 15
-         int gdo0 = 5;   // GPIO 5
-         int gdo2 = 4;   // GPIO 4
- */
-        byte sck = 18; // GPIO 18
+
+        byte sck = 18;  // GPIO 18
         byte miso = 19; // GPIO 19
         byte mosi = 23; // GPIO
-        byte ss = 5; // GPIO 5
-        int gdo0 = 2; // GPIO 2
-        int gdo2 = 4; // GPIO 4
+        byte ss = 5;    // GPIO 5
+        int gdo0 = 2;   // GPIO 2
+        int gdo2 = 4;   // GPIO 4
 
-        int bigrecordingbufferpos = 0;
         int len;
+
+        unsigned long elapsed(unsigned long since, unsigned long now)
+        {
+            if (since > now)
+            {
+                // millis() overflows every ~50 days
+                return (ULONG_MAX - since) + now;
+            }
+            else
+            {
+                return now - since;
+            }
+        }
 
         void Q8RFSwitch::setup()
         {
@@ -44,7 +43,7 @@ namespace esphome
             ELECHOUSE_cc1101.setGDO(gdo0, gdo2);
 
             if (ELECHOUSE_cc1101.getCC1101())
-            { // Check the CC1101 Spi connection.
+            {
                 ESP_LOGCONFIG(TAG, "Connection OK");
             }
             else
@@ -81,94 +80,51 @@ namespace esphome
             ELECHOUSE_cc1101.setPQT(0);             // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
             ELECHOUSE_cc1101.setAppendStatus(0);    // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
 
+            set_update_interval(300000);
+
             ESP_LOGCONFIG(TAG, "setup");
         }
 
         void Q8RFSwitch::write_state(bool state)
         {
 
-            ESP_LOGCONFIG(TAG, "write_state: %s", state ? "true" : "false");
+            ESP_LOGCONFIG(TAG, "Send state %s: %s", name_.c_str(), state ? "on" : "off");
+
             if (this->state_ != state)
             {
-                this->set_state(state);
                 this->state_ = state;
                 this->publish_state(state);
             }
+            this->set_state(state);
         }
 
         void Q8RFSwitch::set_state(bool state)
         {
-
-            // read the incoming byte:
-            bigrecordingbufferpos = 0;
             const char *cmdline;
-            if (state)
-            {
-                cmdline = on_message_.c_str();
-            }
-            else
-            {
-                cmdline = off_message_.c_str();
-            }
-            ESP_LOGCONFIG(TAG, "cmdline: %s", cmdline);
+            cmdline = state ? on_message_.c_str() : off_message_.c_str();
+
             len = strlen(cmdline);
-            // convert hex array to set of bytes
-            // convert the hex content to array of bytes
             hextoascii(textbuffer, (byte *)cmdline, len);
             len = len / 2;
-            // check if the frame fits into the buffer and store it
-            if ((bigrecordingbufferpos + len) < RECORDINGBUFFERSIZE)
-            { // copy current frame and increase pointer for next frames
-                memcpy(&bigrecordingbuffer[bigrecordingbufferpos], &textbuffer, len);
-                // increase position in big recording buffer for next frame
-                bigrecordingbufferpos = bigrecordingbufferpos + len;
-                ESP_LOGCONFIG(TAG, "Chunk added to recording buffer");
-            }
-            else
-            {
-                ESP_LOGCONFIG(TAG, "Buffer is full. The frame does not fit. ");
-            };
 
-            // take interval period for sampling
-            // setup async mode on CC1101 and go into TX mode
-            // with GDO0 pin processing
             ELECHOUSE_cc1101.setCCMode(0);
             ELECHOUSE_cc1101.setPktFormat(3);
             ELECHOUSE_cc1101.SetTx();
-            // start replaying GDO0 bit state from data in the buffer with bitbanging
-            ESP_LOGCONFIG(TAG, "Replaying RAW data from the buffer...");
-            pinMode(gdo0, OUTPUT);
 
-            // temporarly disable WDT for the time of recording
-            // ESP.wdtDisable();
-            // start RF replay
+            pinMode(gdo0, OUTPUT);
             for (int i = 1; i < len; i++)
             {
-                byte receivedbyte = bigrecordingbuffer[i];
-                for (int j = 7; j > -1; j--) // 8 bits in a byte
+                byte receivedbyte = textbuffer[i];
+                for (int j = 7; j > -1; j--)
                 {
-                    digitalWrite(gdo0, bitRead(receivedbyte, j)); // Set GDO0 according to recorded byte
-                    delayMicroseconds(400);                       // delay for selected sampling interval
+                    digitalWrite(gdo0, bitRead(receivedbyte, j));
+                    delayMicroseconds(400);
                 }
-                // feed the watchdog
-              //  ESP.wdtFeed();
             }
-            // Enable WDT
-            // ESP.wdtEnable(5000);
-
-            ESP_LOGCONFIG(TAG, "Replaying RAW data complete.");
-            // setting normal pkt format again
 
             ELECHOUSE_cc1101.setCCMode(1);
             ELECHOUSE_cc1101.setPktFormat(0);
-            ELECHOUSE_cc1101.SetTx();
-            // pinMode(gdo0pin, INPUT);
-            // feed the watchdog
-         //   ESP.wdtFeed();
-            // needed for ESP8266
-            yield();
-            ESP_LOGCONFIG(TAG, "end");
-            this->setup();
+            ELECHOUSE_cc1101.SetRx();
         }
 
         void Q8RFSwitch::dump_config()
@@ -177,7 +133,8 @@ namespace esphome
 
         void Q8RFSwitch::update()
         {
-            ESP_LOGCONFIG(TAG, "update");
+            ESP_LOGD(TAG, "Resending last state.");
+            this->write_state(state_);
         }
 
         void Q8RFSwitch::hextoascii(byte *ascii_ptr, byte *hex_ptr, int len)

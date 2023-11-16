@@ -10,7 +10,7 @@ namespace esphome
   namespace q8rf
   {
 
-    class Q8RFSwitch : public switch_::Switch, public Component
+    class Q8RFSwitch : public switch_::Switch, public PollingComponent
     {
     protected:
       std::string on_message_;
@@ -19,15 +19,13 @@ namespace esphome
       void hextoascii(byte *ascii_ptr, byte *hex_ptr, int len);
 
     public:
-      Q8RFSwitch() {}
+      Q8RFSwitch() : PollingComponent(1000) {}
       void set_on_message(std::string on_message);
       void set_off_message(std::string off_message);
       void setup();
       void update();
-
       void write_state(bool state) override;
       void dump_config() override;
-
       void set_state(bool state);
     };
 
