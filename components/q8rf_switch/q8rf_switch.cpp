@@ -14,12 +14,11 @@ namespace esphome
         static const char *TAG = "q8rf.switch";
 
         byte textbuffer[BUF_LENGTH];
-
-        byte sck = 18;  // GPIO 18
-        byte miso = 19; // GPIO 19
-        byte mosi = 23; // GPIO
-        byte ss = 5;    // GPIO 5
-        int gdo0 = 2;   // GPIO 2
+        byte sck = 14;  // GPIO 14
+        byte miso = 12; // GPIO 12
+        byte mosi = 13; // GPIO 13
+        byte ss = 15;   // GPIO 15
+        int gdo0 = 5;   // GPIO 5
         int gdo2 = 4;   // GPIO 4
 
         int len;
@@ -118,11 +117,15 @@ namespace esphome
                     digitalWrite(gdo0, bitRead(receivedbyte, j));
                     delayMicroseconds(400);
                 }
+                ESP.wdtFeed();
             }
 
             ELECHOUSE_cc1101.setCCMode(1);
             ELECHOUSE_cc1101.setPktFormat(0);
             ELECHOUSE_cc1101.SetRx();
+            
+            ESP.wdtFeed();
+            yield();
         }
 
         void Q8RFSwitch::dump_config()
