@@ -15,7 +15,7 @@ namespace esphome
     protected:
       std::string on_message_;
       std::string off_message_;
-      uint32_t set_poll_interval_;
+      uint32_t poll_interval_;
       bool state_ = false;
       void hextoascii(byte *ascii_ptr, byte *hex_ptr, int len);
 
