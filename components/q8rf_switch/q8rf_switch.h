@@ -15,6 +15,7 @@ namespace esphome
     protected:
       std::string on_message_;
       std::string off_message_;
+      uint32_t set_poll_interval_;
       bool state_ = false;
       void hextoascii(byte *ascii_ptr, byte *hex_ptr, int len);
 
@@ -22,6 +23,7 @@ namespace esphome
       Q8RFSwitch() : PollingComponent(300000) {}
       void set_on_message(std::string on_message);
       void set_off_message(std::string off_message);
+      void set_poll_interval(uint32_t off_message);
       void setup();
       void update();
       void write_state(bool state) override;

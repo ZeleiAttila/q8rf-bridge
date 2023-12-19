@@ -79,8 +79,8 @@ namespace esphome
             ELECHOUSE_cc1101.setPQT(0);             // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
             ELECHOUSE_cc1101.setAppendStatus(0);    // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
 
-            set_update_interval(300000);
-            ESP_LOGCONFIG(TAG, "setup");
+            set_update_interval(this->set_poll_interval_);
+            ESP_LOGCONFIG(TAG, "setup interval: %d", this->set_poll_interval_);
         }
 
         void Q8RFSwitch::write_state(bool state)
@@ -164,6 +164,7 @@ namespace esphome
 
         void Q8RFSwitch::set_on_message(std::string on_message) { this->on_message_ = on_message; }
         void Q8RFSwitch::set_off_message(std::string off_message) { this->off_message_ = off_message; }
+        void Q8RFSwitch::set_poll_interval(uint32_t poll_interval) { this->poll_interval_ = poll_interval; }
 
     } // namespace q8rf
 } // namespace esphome

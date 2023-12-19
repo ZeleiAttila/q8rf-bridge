@@ -36,8 +36,8 @@ async def to_code(config):
 
     cg.add(var.set_on_message(config[ON_MESSAGE]))
     cg.add(var.set_off_message(config[OFF_MESSAGE]))
-    
+
     if POLL_INTERVAL in config:
-        cg.add(var.set_q8rf_resend_interval(config[POLL_INTERVAL]))
+        cg.add(var.set_poll_interval(config[POLL_INTERVAL]))
 
     cg.add(var.setup())
