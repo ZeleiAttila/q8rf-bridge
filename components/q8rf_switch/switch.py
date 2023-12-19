@@ -7,6 +7,7 @@ from esphome.const import CONF_ID
 
 ON_MESSAGE = "on_message"
 OFF_MESSAGE = "off_message"
+POLL_INTERVAL = "poll_interval"
 
 q8rf_ns = cg.esphome_ns.namespace("q8rf")
 q8rf_SWITCH = q8rf_ns.class_("Q8RFSwitch",  switch.Switch, cg.Component)
@@ -22,6 +23,7 @@ CONFIG_SCHEMA = (
             {
                 cv.Required(ON_MESSAGE): cv.string,
                 cv.Required(OFF_MESSAGE): cv.string,
+                cv.Optional(POLL_INTERVAL): cv.uint32_t
             }
         )
     )
@@ -34,4 +36,8 @@ async def to_code(config):
 
     cg.add(var.set_on_message(config[ON_MESSAGE]))
     cg.add(var.set_off_message(config[OFF_MESSAGE]))
+    
+    if POLL_INTERVAL in config:
+        cg.add(var.set_q8rf_resend_interval(config[POLL_INTERVAL]))
+
     cg.add(var.setup())
