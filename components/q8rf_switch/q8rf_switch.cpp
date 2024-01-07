@@ -81,6 +81,8 @@ namespace esphome
 
             set_update_interval(this->poll_interval_);
             ESP_LOGCONFIG(TAG, "setup interval: %d", this->poll_interval_);
+            if ()
+                ESP_LOGCONFIG(TAG, "sampling interval: %d", this->sampling_interval_);
         }
 
         void Q8RFSwitch::write_state(bool state)
@@ -100,6 +102,7 @@ namespace esphome
         {
             const char *cmdline;
             cmdline = state ? on_message_.c_str() : off_message_.c_str();
+            ESP_LOGCONFIG(TAG, "on_message: %s", state ? on_message_ : off_message_);
 
             len = strlen(cmdline);
             hextoascii(textbuffer, (byte *)cmdline, len);
@@ -165,6 +168,7 @@ namespace esphome
         void Q8RFSwitch::set_on_message(std::string on_message) { this->on_message_ = on_message; }
         void Q8RFSwitch::set_off_message(std::string off_message) { this->off_message_ = off_message; }
         void Q8RFSwitch::set_poll_interval(uint32_t poll_interval) { this->poll_interval_ = poll_interval; }
+        void Q8RFSwitch::set_sampling_interval(uint32_t sampling_interval) { this->sampling_interval_ = sampling_interval; }
 
     } // namespace q8rf
 } // namespace esphome
