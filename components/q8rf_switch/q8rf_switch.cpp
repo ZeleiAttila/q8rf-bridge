@@ -117,7 +117,7 @@ namespace esphome
                 for (int j = 7; j > -1; j--)
                 {
                     digitalWrite(gdo0, bitRead(receivedbyte, j));
-                    delayMicroseconds(200);
+                    delayMicroseconds(this->sampling_interval_);
                 }
                 ESP.wdtFeed();
             }
