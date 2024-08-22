@@ -13,11 +13,11 @@ namespace esphome
 
         static const char *TAG = "q8rf.switch";
 
-        byte textbuffer[BUF_LENGTH];
-        byte sck = 14;  // GPIO 14
-        byte miso = 12; // GPIO 12
-        byte mosi = 13; // GPIO 13
-        byte ss = 15;   // GPIO 15
+        uint8_t textbuffer[BUF_LENGTH];
+        uint8_t sck = 14;  // GPIO 14
+        uint8_t miso = 12; // GPIO 12
+        uint8_t mosi = 13; // GPIO 13
+        uint8_t ss = 15;   // GPIO 15
         int gdo0 = 5;   // GPIO 5
         int gdo2 = 4;   // GPIO 4
 
@@ -75,9 +75,9 @@ namespace esphome
             ELECHOUSE_cc1101.setDcFilterOff(0);     // Disable digital DC blocking filter before demodulator. Only for data rates ≤ 250 kBaud The recommended IF frequency changes when the DC blocking is disabled. 1 = Disable (current optimized). 0 = Enable (better sensitivity).
             ELECHOUSE_cc1101.setManchester(0);      // Enables Manchester encoding/decoding. 0 = Disable. 1 = Enable.
             ELECHOUSE_cc1101.setFEC(0);             // Enable Forward Error Correction (FEC) with interleaving for packet payload (Only supported for fixed packet length mode. 0 = Disable. 1 = Enable.
-            ELECHOUSE_cc1101.setPRE(0);             // Sets the minimum number of preamble bytes to be transmitted. Values: 0 : 2, 1 : 3, 2 : 4, 3 : 6, 4 : 8, 5 : 12, 6 : 16, 7 : 24
+            ELECHOUSE_cc1101.setPRE(0);             // Sets the minimum number of preamble uint8_ts to be transmitted. Values: 0 : 2, 1 : 3, 2 : 4, 3 : 6, 4 : 8, 5 : 12, 6 : 16, 7 : 24
             ELECHOUSE_cc1101.setPQT(0);             // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
-            ELECHOUSE_cc1101.setAppendStatus(0);    // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
+            ELECHOUSE_cc1101.setAppendStatus(0);    // When enabled, two status uint8_ts will be appended to the payload of the packet. The status uint8_ts contain RSSI and LQI values, as well as CRC OK.
 
             set_update_interval(this->poll_interval_);
             ESP_LOGCONFIG(TAG, "setup interval: %d", this->poll_interval_);
@@ -103,7 +103,7 @@ namespace esphome
             cmdline = state ? on_message_.c_str() : off_message_.c_str();
 
             len = strlen(cmdline);
-            hextoascii(textbuffer, (byte *)cmdline, len);
+            hextoascii(textbuffer, (uint8_t *)cmdline, len);
             len = len / 2;
 
             ELECHOUSE_cc1101.setCCMode(0);
@@ -113,10 +113,10 @@ namespace esphome
             pinMode(gdo0, OUTPUT);
             for (int i = 1; i < len; i++)
             {
-                byte receivedbyte = textbuffer[i];
+                uint8_t receiveduint8_t = textbuffer[i];
                 for (int j = 7; j > -1; j--)
                 {
-                    digitalWrite(gdo0, bitRead(receivedbyte, j));
+                    digitalWrite(gdo0, bitRead(receiveduint8_t, j));
                     delayMicroseconds(this->sampling_interval_);
                 }
                 ESP.wdtFeed();
@@ -140,9 +140,9 @@ namespace esphome
             this->write_state(state_);
         }
 
-        void Q8RFSwitch::hextoascii(byte *ascii_ptr, byte *hex_ptr, int len)
+        void Q8RFSwitch::hextoascii(uint8_t *ascii_ptr, uint8_t *hex_ptr, int len)
         {
-            byte i, j;
+            uint8_t i, j;
             for (i = 0; i < (len / 2); i++)
             {
                 j = hex_ptr[i * 2];
