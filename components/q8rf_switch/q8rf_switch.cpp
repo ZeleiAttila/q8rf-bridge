@@ -18,10 +18,12 @@ namespace esphome
         my_byte miso = 12; // GPIO 12
         my_byte mosi = 13; // GPIO 13
         my_byte ss = 15;   // GPIO 15
-        int gdo0 = 5;   // GPIO 5
-        int gdo2 = 4;   // GPIO 4
+        int gdo0 = 5;      // GPIO 5
+        int gdo2 = 4;      // GPIO 4
 
         int len;
+
+        bool pol_state_ = false;
 
         unsigned long elapsed(unsigned long since, unsigned long now)
         {
@@ -79,15 +81,30 @@ namespace esphome
             ELECHOUSE_cc1101.setPQT(0);             // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
             ELECHOUSE_cc1101.setAppendStatus(0);    // When enabled, two status my_bytes will be appended to the payload of the packet. The status my_bytes contain RSSI and LQI values, as well as CRC OK.
 
-            set_update_interval(this->poll_interval_);
-            ESP_LOGCONFIG(TAG, "setup interval: %d", this->poll_interval_);
-            ESP_LOGCONFIG(TAG, "sampling interval: %d", this->sampling_interval_);
+            if (esphome::network::is_connected())
+            {
+                set_update_interval(this->poll_interval_);
+                pol_state_ = true;
+                ESP_LOGCONFIG(TAG, "setup interval: %d", this->poll_interval_);
+                ESP_LOGCONFIG(TAG, "sampling interval: %d", this->sampling_interval_);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Device not connected to Wi-Fi, setup skipped.");
+            }
         }
 
         void Q8RFSwitch::write_state(bool state)
         {
 
             ESP_LOGCONFIG(TAG, "Send state %s: %s", name_.c_str(), state ? "on" : "off");
+            if (!pol_state_)
+            {
+                set_update_interval(this->poll_interval_);
+                pol_state_ = true;
+                ESP_LOGCONFIG(TAG, "setup interval: %d", this->poll_interval_);
+                ESP_LOGCONFIG(TAG, "sampling interval: %d", this->sampling_interval_);
+            }
 
             if (this->state_ != state)
             {
@@ -136,8 +153,16 @@ namespace esphome
 
         void Q8RFSwitch::update()
         {
-            ESP_LOGD(TAG, "Resending last state.");
-            this->write_state(state_);
+            ESP_LOGD(TAG, "update");
+            if (esphome::network::is_connected())
+            {
+                ESP_LOGD(TAG, "Resending last state.");
+                this->write_state(state_);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Device not connected to Wi-Fi, update skipped.");
+            }
         }
 
         void Q8RFSwitch::hextoascii(my_byte *ascii_ptr, my_byte *hex_ptr, int len)
