@@ -4,7 +4,7 @@
 #include "esphome/components/switch/switch.h"
 #include <string>
 
-
+#define my_byte uint8_t
 namespace esphome
 {
   namespace q8rf
@@ -18,7 +18,7 @@ namespace esphome
       uint32_t poll_interval_;
       uint32_t sampling_interval_=400;
       bool state_ = false;
-      void hextoascii(uint8_t *ascii_ptr, uint8_t *hex_ptr, int len);
+      void hextoascii(my_byte *ascii_ptr, my_byte *hex_ptr, int len);
 
     public:
       Q8RFSwitch() : PollingComponent(300000) {}
