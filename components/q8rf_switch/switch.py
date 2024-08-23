@@ -1,10 +1,8 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import switch, wifi
+from esphome.components import switch
 from esphome.components import spi
 from esphome.const import CONF_ID
-from esphome import automation
-from esphome.core import CORE
 
 
 ON_MESSAGE = "on_message"
@@ -46,6 +44,5 @@ async def to_code(config):
 
     if SAMPLING_INTERVAL in config:
         cg.add(var.set_sampling_interval(config[SAMPLING_INTERVAL]))
-    
-    wifi_component = await cg.get_variable(wifi.WIFI_GLOBAL_VAR)
-    cg.add(wifi_component.add_on_connect(var.setup))
+
+    cg.add(var.setup())
